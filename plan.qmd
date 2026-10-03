@@ -1,7 +1,7 @@
 ---
-title: "CES 2025: A Simple Silicon-Sampling Test"
-subtitle: "Ten questions · fifteen groups · a modal-answer baseline"
-date: "2026-09-30"
+title: "CES 2025: A Silicon-Sampling Test"
+subtitle: "Ten questions · fifteen groups · CES 2021 profiles · two hosted models"
+date: "2026-10-03"
 format:
   pdf:
     documentclass: article
@@ -18,11 +18,15 @@ format:
 
 ## 1. What we are testing
 
-Compare any LLM, fine-tuned or not, against always returning the most common CES answer. **Five regions × three ages = 15 groups.** Run each group 100 times. Each run answers all ten questions: **1,500 runs, 1,500 result rows and 15,000 individual answers per model**. Separate-question calls would total 15,000.
+Can an LLM, given a profile of a Canadian, reproduce how Canadians answered ten CES 2025 questions? Does it help to give it a richer profile or a bigger model?
 
-**Regions:** BC; AB+SK+MB+Terr (Alberta, Saskatchewan, Manitoba, Yukon, Northwest Territories and Nunavut); ON; QC; ATL (New Brunswick, Nova Scotia, Prince Edward Island, Newfoundland and Labrador). **Ages:** 18–34, 35–54, 55+. Assign groups from CES age and province.
+**Strict temporal holdout.** CES 2025 is used **only as the answer key** for scoring. Profiles and all baselines come from **CES 2021**. Nothing about 2025 respondents, their answers or their answer distributions is shown to any model or used to build any comparator.
 
-## 2. Ten questions, kept identical across models
+**Scoring is at the group level only.** *Five regions × three ages = 15 groups.* In each group, the model's 100 answers are compared with the 2025 human answer distribution. Synthetic rows are built from 2021 respondents and have no 2025 counterpart, so there is no per-person accuracy.
+
+**Regions:** BC; AB+SK+MB+Terr (Alberta, Saskatchewan, Manitoba, Yukon, Northwest Territories, Nunavut); ON; QC; ATL (New Brunswick, Nova Scotia, Prince Edward Island, Newfoundland and Labrador). **Ages:** 18–34, 35–54, 55+. Groups are assigned from CES age and province, identically in 2021 and 2025.
+
+## 2. Ten questions, identical across all runs
 
 English campaign-period items; prefix variable suffixes with `cps25_`. Full wording and options: `questions.json`.
 
@@ -33,54 +37,92 @@ English campaign-period items; prefix variable suffixes with `cps25_`. Full word
 5. Individuals who are terminally ill should be allowed to end their lives with the assistance of a doctor. (`pos_life`)
 6. The federal government should do more to help build oil pipelines. (`pos_energy`)
 7. When there is a conflict between protecting the environment and creating jobs, jobs should come first. (`pos_jobs`)
-8. Do you think Canada should admit: **more, fewer, or about the same number of immigrants**? (`imm`; options incorporated here for readability)
+8. Do you think Canada should admit: **more, fewer, or about the same number of immigrants**? (`imm`)
 9. On the whole, how satisfied are you with the way democracy works in Canada? (`demsat`)
-10. Over the past year, has your financial situation: **got better, stayed about the same, or got worse**? (`own_fin_retro`; options incorporated here for readability)
+10. Over the past year, has your financial situation: **got better, stayed about the same, or got worse**? (`own_fin_retro`)
 
-Items 1–4 offer less / same / more spending; 5–7 offer five agreement levels; 9 offers four satisfaction levels. **Every item also offers “Don't know/Prefer not to answer”; retain it as an answer category.** Do not collapse answer options into agree/disagree or remove uncertain answers.
+Items 1–4 offer less / same / more spending; 5–7 offer five agreement levels; 9 offers four satisfaction levels. **Every item also offers "Don't know/Prefer not to answer"; retain it as an answer category.** Do not collapse options.
 
-## 3. Validation and model-result files
+**2021 availability (verified 2026-10-03).** All ten items exist in CES 2021 (`cps21_*`), with the same answer options; only the punctuation of "Don't know/ Prefer not to answer" differs, which is normalized. Nine items have identical wording. **One differs: `pos_energy`.** 2021 asks whether the government "should do more to help Canada's energy sector, including building oil pipelines"; 2025 asks only about building oil pipelines. It is used for training and baselines as a near-match and reported separately. Module split in 2021: housing and childcare spending each went to about half the respondents (n ≈ 10.5k each), the three agreement items to about 12.5k, and the other five to everyone (n = 20,968).
 
-**`validation.csv`:** 20,180 human respondents, exactly 13 columns in this order: `cps25_ResponseId`, the ten question variables above, `Age`, `Region`. Preserve the original unique CES ID. Answers are readable English option labels, with numeric prefixes removed. Age is the age band; Region is one of the five labels above. No survey-weight column is added.
+## 3. Design: 6 inference runs
 
-**`Not asked / missing`** is excluded separately for each question, never treated as an opinion. Retain incomplete respondents: housing/childcare and other modules were assigned to different people. All 20,180 rows have unique IDs and valid age/region.
+| | Basic | Rich | Rich + partisan |
+|---|---|---|---|
+| Small model (Qwen3.5-9B), Together | run 1 | run 2 | run 3 |
+| Large model (Qwen3.8-2.4T-A95B), Together | run 4 | run 5 | run 6 |
 
-**One `results_MODEL.csv` per model:** the same 13 columns, with a unique synthetic run ID in the first column, 100 rows per group and all ten answers on each row. Synthetic IDs do not identify or match real CES people. Supply only region, age and the English questionnaire/options. Use fresh context and temperature 1.0 where supported; record model version, training status and settings. Never reveal validation answers or modes. Retain invalid outputs; retry only failed requests.
+Each run is **1,500 calls, one per profile, each answering all ten questions** (100 profiles × 15 groups).
 
-\newpage
+- **Small model: `Qwen/Qwen3.5-9B`.** It is the only 7–9B model Together serves pay-per-call (checked 2026-10-03: 16 of 74 priced chat models answered without a dedicated endpoint). Price: $0.17 / $0.25 per M input/output tokens.
+- **Large model: `Qwen/Qwen3.8-2.4T-A95B`** (mixture of experts: 2.4T total, 95B active parameters). It is from the same family as the small model, so the size comparison is not confounded by model family. Price: $2 / $6 per M tokens.
+- **Thinking off.** Both models think by default and return an empty answer within a short token limit. Pass `chat_template_kwargs: {enable_thinking: false}` on Together. The 2.4T model sometimes adds a disclaimer ("I don't have personal opinions…"); the parser reads the ten `n: k` lines and ignores other text.
+- **Cost estimate** (about 650 input and 40 output tokens per call, 4,500 calls per model): about $0.60 for the 9B and $7 for the 2.4T; under $10 with margin.
+- **Contamination.** Both models were released in 2026, after CES 2025 fieldwork. They may know the 2025 campaign and even published CES 2025 results. The only pay-per-call model with a pre-2025 cutoff is `Llama-3.3-70B-Instruct-Turbo`, and it has no small sibling on Together. Report this as a limitation rather than switching.
+- **Fine-tuning deferred.** A local LoRA fine-tune of the 9B on CES 2021 (plus a matching local 4-bit base, to separate fine-tuning from quantization) is out of scope for now: a local smoke test crashed the 16 GB M1. It can be added later as runs 7–12 without changing anything below, since profiles, prompt and scoring are shared.
 
-## 4. Exact TV calculation within each group
+## 4. Profiles: drawn from CES 2021
 
-Let $j$ denote one question, $g$ one of the 15 groups, and $k$ an answer category. Let $n_{jg}$ be the number of human respondents in group $g$ with a recorded answer to question $j$, including don't-know answers but excluding `Not asked / missing`. Use raw counts:
+**Draw once, reuse everywhere.** For each of the 15 groups, draw **100 CES 2021 campaign-period respondents** without replacement, using a fixed seed. Save them in `profiles_2021.csv`: synthetic run ID, CES 2021 respondent ID, group, all profile fields. All runs and all baselines use these **same 1,500 people**, so conditions differ only in which fields are shown.
 
-$$p_{jgk}=\frac{\text{human count choosing }k\text{ in }(j,g)}{n_{jg}},\qquad q_{jgk}=\frac{\text{model count choosing }k\text{ in }(j,g)}{100}.$$
+**Conditions** (fields cumulative):
 
-An unrecognized or empty model answer becomes **Invalid output**, an extra category with human probability zero. Include it in all sums; keep the denominator at 100. No smoothing.
+- **Basic:** region (as the plain-language description above), age band, gender.
+- **Rich:** basic + province, education, household income, first language, religion, born in Canada.
+- **Rich + partisan:** rich + federal party identification, left–right self-placement (0–10), 2019 vote recall. **Never** include answers to any of the ten test questions or close substitutes.
 
-$$\boxed{TV_{jg}=\frac12\sum_k|p_{jgk}-q_{jgk}|}$$
+CES 2021 sources, all from the campaign-period survey: `cps21_age`, `cps21_genderid`, `cps21_province`, `cps21_education`, `cps21_income_cat`, `cps21_language_*`, `cps21_religion`, `cps21_bornin_canada`, `cps21_fed_id`, `cps21_lr_scale_bef_1`, `cps21_vote_2019`. Urban/rural is left out: it was asked only after the election (`pes21_rural_urban`) and is missing for 28% of respondents. Exact recodes are fixed in `build.py`. A missing profile field is shown as **"Not stated"**, so respondents are not dropped. Profiles describe the 2021 sample's composition within each group; if it differs from 2025's, that is a stated limitation.
 
-This produces **150 TVs per model: ten questions × fifteen groups**. For example, human shares $(.20,.30,.40,.10)$ and model shares $(.10,.35,.45,.10)$ give TV $=\frac12(.10+.05+.05+0)=.10$. Lower is better: 0 means identical distributions; 1 means no overlap. Report human counts; flag those below 30 as imprecise. Stop scoring if a cell has no human answers.
+## 5. Prompt and inference settings
 
-## 5. Exact weighting and overall TV for each question
+One fixed template for every model and run, stored in the repo (`prompt.txt`) and filled from `profiles_2021.csv` and `questions.json`:
 
-**The target is the observed CES sample, not a survey-weighted estimate of Canada's population.** Territories have no official CES survey weights. Use raw counts for human distributions and synthetic group weights.
+- system message: a short neutral instruction (simulated survey respondent; answer every question; option numbers only);
+- user message: the profile as a bulleted list, then the ten questions **in the fixed order above**, each with its numbered options;
+- required output: ten lines `1: <option number>` … `10: <option number>`.
 
-For each question separately, define the group's share among people who answered it:
+Settings: **temperature 1.0, top-p 1.0**, fresh context per call, no examples, no 2025 information. Reasoning/"thinking" modes off where the model offers them. A missing, unparseable or out-of-range answer becomes **Invalid output** for that item only. Retry only failed HTTP requests, never undesired answers. Record model ID, provider, date, settings and token counts in `runs.json`.
 
-$$N_j=\sum_{g=1}^{15}n_{jg},\qquad a_{jg}=\frac{n_{jg}}{N_j},\qquad \text{weight of each model row in group }g=\frac{a_{jg}}{100}.$$
+Output: `results_<model>_<condition>.csv`, the same 13-column schema as `validation.csv` (synthetic run ID, ten answers as exact option text, Age, Region), 100 rows per group.
 
-Thus, if a group contains 8% of human answers to that question, each of its 100 model answers receives weight $0.08/100=0.0008$. Group shares are **question-specific**, because questionnaire modules change who answered. Shares sum to one; `group_weights.csv` records counts and weights.
+## 6. Validation file and exact TV calculation
 
-Aggregate the distributions first, then calculate TV:
+**`validation.csv`:** 20,180 CES 2025 respondents, 13 columns: `cps25_ResponseId`, the ten question variables, `Age`, `Region`. Answers are readable option labels. **`Not asked / missing`** is excluded per question; don't-know answers are kept.
 
-$$P_{jk}=\sum_g a_{jg}p_{jgk},\qquad Q_{jk}=\sum_g a_{jg}q_{jgk},\qquad \boxed{TV_j^{\mathrm{overall}}=\frac12\sum_k|P_{jk}-Q_{jk}|}.$$
+Let $j$ be a question, $g$ a group and $k$ an answer category. $n_{jg}$ is the number of 2025 humans in $g$ who answered $j$. Using raw counts:
 
-$P_{jk}$ is exactly the answer share obtained by pooling all valid human answers to question $j$. **Do not pool the 1,500 synthetic rows with equal weights:** that would give all groups the same size. Also, **overall TV is not the average of group TVs**; opposite group errors can cancel. Report both the ten overall TVs and all 150 group TVs. The headline score is the arithmetic mean of the ten overall TVs; each question has equal importance. 
+$$p_{jgk}=\frac{\text{human count choosing }k\text{ in }(j,g)}{n_{jg}},\qquad q_{jgk}=\frac{\text{model count choosing }k\text{ in }(j,g)}{100},\qquad \boxed{TV_{jg}=\frac12\sum_k|p_{jgk}-q_{jgk}|}$$
 
-## 6. The “stupid” baseline and the improvement test
+Invalid output is an extra category with human probability zero, and the denominator stays 100. That gives **150 cell TVs per run**. Flag cells with $n_{jg}<30$. Stop if a cell has no human answers.
 
-**`results_stupid_baseline.csv`:** find the single most common valid CES answer to each question, across all groups combined, using raw counts. Break a tie using the smallest original CES option code. For that question, repeat this same answer 100 times in every group. This gives 1,500 rows; the baseline ignores group differences.
+**Overall TV per question.** With question-specific group shares $a_{jg}=n_{jg}/N_j$ (`group_weights.csv`), aggregate first, then compute TV:
 
-Score it with the identical formulas and group weights. For each question report **improvement = baseline overall TV − model overall TV**; positive means the model wins. Do the same for each question–group cell. A model beats the baseline on the headline benchmark if its mean overall TV across the ten questions is strictly lower; equal scores are a tie. Report how many of the 150 cells improve as well, so aggregate improvement cannot hide subgroup losses.
+$$P_{jk}=\sum_g a_{jg}p_{jgk},\qquad Q_{jk}=\sum_g a_{jg}q_{jgk},\qquad \boxed{TV_j^{\mathrm{overall}}=\frac12\sum_k|P_{jk}-Q_{jk}|}$$
 
-The baseline uses validation answers to select the mode: it is an informed diagnostic reference, not a deployable forecast. Record model training exposure to these items/respondents before claiming unseen-data performance. No LLM inference is needed to construct this baseline.
+The target is the observed CES 2025 sample, not a survey-weighted population estimate. Overall TV is not the mean of cell TVs. **Headline score per run: the mean of the ten overall TVs.** Uncertainty: 95% intervals from 1,000 bootstrap resamples of the 100 synthetic rows within each group.
+
+## 7. Baselines (all from CES 2021)
+
+Each baseline produces one answer per profile in `profiles_2021.csv` (1,500 rows) and is scored exactly like a model.
+
+1. **Overall mode:** the most common 2021 answer to each question, given to everyone (ties: smallest CES code).
+2. **Group mode:** the most common 2021 answer within each region × age group.
+3. **Multinomial logit, one per condition:** fitted on all other CES 2021 respondents (excluding the 1,500 profile respondents), using exactly that condition's profile fields, one model per question. For each profile, draw one answer from its predicted probabilities (fixed seed). This shows whether an LLM beats a simple statistical model given the **same information**.
+
+Baselines 1–2 ignore the profile details. Baseline 3 is the main comparator for each condition. All baselines carry 2021→2025 opinion change as error. That drift is part of what is being tested.
+
+## 8. What we report
+
+- Headline score with CI for all 6 runs and all baselines; ten overall TVs and 150 cell TVs per run.
+- **Improvement = baseline TV − model TV** (positive means the model wins), against overall mode and the matching logit, per question and per cell. Report how many of the 150 cells improve.
+- Effects: **richness** (basic → rich → rich + partisan, within model), **size** (runs 1–3 vs. 4–6).
+- Invalid-output rate per run and item; `pos_energy` (reworded since 2021) reported separately.
+- Contamination note: each model's release date and training cutoff relative to CES 2025 fieldwork. Synthetic results are not polling results.
+
+## 9. Order of work
+
+1. ✓ CES 2021 v2.0 is in `opinionbench-research/data/raw/CES2021/` (n = 20,968). Record its SHA-256 (`d8abbff6…`) in `manifest.json`.
+2. ✓ Ten items and profile variables verified (§2, §4); write the recodes.
+3. ✓ Models picked (§3). Fine-tuning deferred.
+4. Build `profiles_2021.csv`, `prompt.txt` and baselines; dry-run with the mock backend.
+5. Runs 1–6 on Together; score everything once.

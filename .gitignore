@@ -3,3 +3,6 @@ results_*.csv
 scores_*.csv
 group_weights.csv
 __pycache__/
+profiles_2021.csv
+train_2021.csv
+raw/

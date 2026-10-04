@@ -57,7 +57,7 @@ Each run is **1,500 calls, one per profile, each answering all ten questions** (
 - **Small model: `Qwen/Qwen3.5-9B`.** It is the only 7–9B model Together serves pay-per-call (checked 2026-10-03: 16 of 74 priced chat models answered without a dedicated endpoint). Price: $0.17 / $0.25 per M input/output tokens.
 - **Large model: `Qwen/Qwen3.8-2.4T-A95B`** (mixture of experts: 2.4T total, 95B active parameters). It is from the same family as the small model, so the size comparison is not confounded by model family. Price: $2 / $6 per M tokens.
 - **Thinking off.** Both models think by default and return an empty answer within a short token limit. Pass `chat_template_kwargs: {enable_thinking: false}` on Together. The 2.4T model sometimes adds a disclaimer ("I don't have personal opinions…"); the parser reads the ten `n: k` lines and ignores other text.
-- **Cost estimate** (about 650 input and 40 output tokens per call, 4,500 calls per model): about $0.60 for the 9B and $7 for the 2.4T; under $10 with margin.
+- **Cost estimate** (measured in the smoke test: about 900 input and 50–65 output tokens per call, 4,500 calls per model): about $0.75 for the 9B and $9 for the 2.4T; about $10 in total.
 - **Contamination.** Both models were released in 2026, after CES 2025 fieldwork. They may know the 2025 campaign and even published CES 2025 results. The only pay-per-call model with a pre-2025 cutoff is `Llama-3.3-70B-Instruct-Turbo`, and it has no small sibling on Together. Report this as a limitation rather than switching.
 - **Fine-tuning deferred.** A local LoRA fine-tune of the 9B on CES 2021 (plus a matching local 4-bit base, to separate fine-tuning from quantization) is out of scope for now: a local smoke test crashed the 16 GB M1. It can be added later as runs 7–12 without changing anything below, since profiles, prompt and scoring are shared.
 
@@ -81,7 +81,7 @@ One fixed template for every model and run, stored in the repo (`prompt.txt`) an
 - user message: the profile as a bulleted list, then the ten questions **in the fixed order above**, each with its numbered options;
 - required output: ten lines `1: <option number>` … `10: <option number>`.
 
-Settings: **temperature 1.0, top-p 1.0**, fresh context per call, no examples, no 2025 information. Reasoning/"thinking" modes off where the model offers them. A missing, unparseable or out-of-range answer becomes **Invalid output** for that item only. Retry only failed HTTP requests, never undesired answers. Record model ID, provider, date, settings and token counts in `runs.json`.
+Settings: **temperature 1.0, top-p 1.0**, fresh context per call, no examples, no 2025 information. Reasoning/"thinking" modes off where the model offers them; `max_tokens` 1024, so a reply that reasons anyway can still finish (the parser reads only text after a closing reasoning tag). A missing, unparseable or out-of-range answer becomes **Invalid output** for that item only. Retry only failed HTTP requests, never undesired answers. Record model ID, provider, date, settings and token counts in `runs.json`.
 
 Output: `results_<model>_<condition>.csv`, the same 13-column schema as `validation.csv` (synthetic run ID, ten answers as exact option text, Age, Region), 100 rows per group.
 
@@ -124,5 +124,44 @@ Baselines 1–2 ignore the profile details. Baseline 3 is the main comparator fo
 1. ✓ CES 2021 v2.0 is in `opinionbench-research/data/raw/CES2021/` (n = 20,968). Record its SHA-256 (`d8abbff6…`) in `manifest.json`.
 2. ✓ Ten items and profile variables verified (§2, §4); write the recodes.
 3. ✓ Models picked (§3). Fine-tuning deferred.
-4. Build `profiles_2021.csv`, `prompt.txt` and baselines; dry-run with the mock backend.
-5. Runs 1–6 on Together; score everything once.
+4. ✓ Built `profiles_2021.csv`, `prompt.txt` and baselines; dry-run with the mock backend; 15-call live smoke test per model.
+5. ✓ Runs 1–6 on Together (2026-10-03); scored once with `score_all.py`.
+
+\newpage
+
+## 10. Results (runs of 2026-10-03)
+
+**Headline: mean of the ten overall TVs** (lower is better; 95% bootstrap interval in brackets). Total cost about \$11 (\$0.70 for the 9B, \$10.40 for the 2.4T).
+
+| | Basic | Rich | Rich + partisan |
+|---|---|---|---|
+| Qwen3.5-9B (runs 1–3) | 0.357 [0.351, 0.364] | 0.323 [0.317, 0.330] | **0.258** [0.251, 0.266] |
+| Qwen3.8-2.4T-A95B (runs 4–6) | 0.477 [0.471, 0.483] | 0.421 [0.416, 0.427] | 0.323 [0.316, 0.330] |
+| 2021 multinomial logit, same fields | 0.161 [0.155, 0.171] | 0.155 [0.149, 0.165] | 0.150 [0.144, 0.160] |
+| Cells (of 150) where the LLM beats the matching logit: 9B / 2.4T | 9 / 6 | 15 / 7 | 26 / 14 |
+
+2021 overall mode: 0.615; 2021 group mode: 0.504. Every LLM run beats both. Invalid output: 0.2–1.2% of answers per run; 29 of the 4,500 large-model calls hit the 1,024-token limit after reasoning despite thinking being off.
+
+**Overall TV by question**
+
+| Question | 9B basic | 9B rich | 9B partisan | 2.4T basic | 2.4T rich | 2.4T partisan | Logit partisan | 2021 mode |
+|---|---|---|---|---|---|---|---|---|
+| `spend_afford_h` | 0.21 | 0.18 | 0.06 | 0.25 | 0.26 | 0.11 | 0.05 | 0.28 |
+| `spend_nation_c` | 0.39 | 0.43 | 0.27 | 0.46 | 0.50 | 0.37 | 0.08 | 0.60 |
+| `spend_defence` | 0.43 | 0.45 | 0.24 | 0.44 | 0.47 | 0.31 | 0.36 | 0.71 |
+| `spend_rec_indi` | 0.68 | 0.61 | 0.42 | 0.70 | 0.68 | 0.52 | 0.16 | 0.78 |
+| `pos_life` | 0.19 | 0.14 | 0.11 | 0.40 | 0.20 | 0.19 | 0.05 | 0.52 |
+| `pos_energy` (reworded since 2021) | 0.43 | 0.33 | 0.27 | 0.52 | 0.56 | 0.46 | 0.16 | 0.73 |
+| `pos_jobs` | 0.14 | 0.14 | 0.25 | 0.55 | 0.52 | 0.39 | 0.13 | 0.79 |
+| `imm` | 0.62 | 0.59 | 0.57 | 0.55 | 0.58 | 0.43 | 0.33 | 0.74 |
+| `demsat` | 0.24 | 0.21 | 0.19 | 0.43 | 0.26 | 0.26 | 0.05 | 0.48 |
+| `own_fin_retro` | 0.24 | 0.15 | 0.19 | 0.49 | 0.17 | 0.18 | 0.13 | 0.52 |
+
+**Findings**
+
+- **Neither LLM approaches the 2021 logit given the same information.** The best run (9B, rich + partisan) has about 1.7 times the logit's TV and beats it in 26 of 150 cells. The only question where an LLM beats the logit overall is defence (9B partisan 0.24, 2.4T partisan 0.31, logit 0.36).
+- **Richness helps** for both models, with non-overlapping intervals at each step. Partisan fields give the largest gain. It is not uniform by question: the 9B gets worse on `pos_jobs` when partisan fields are added.
+- **Size hurts.** The 2.4T model is worse than the 9B in every condition. Its answers are more concentrated than the human distribution: given basic profiles, 78% say "about the same number of immigrants" and 75% "spend about the same on defence".
+- **Systematic misses, not just low variance.** On immigration, 62% of 2025 respondents chose "fewer"; the 9B chose it 2–4% of the time and the 2.4T 12–23%. On reconciliation spending, the models chose "spend more" 68–91% of the time against 22% of humans; on defence they favour "about the same" while 56% of humans chose "spend more". Defence and immigration are the items that moved most from 2021 to 2025 (TV 0.35 and 0.33 between the 2021 and 2025 distributions; all others 0.04–0.17), which is also why the logit does worst on them. Reconciliation moved less (0.17), so the models' miss there is not explained by drift.
+- **Contamination.** Both models were released after CES 2025 fieldwork. The immigration result gives no sign that they reproduce 2025 opinion, but this is not a test of contamination.
+

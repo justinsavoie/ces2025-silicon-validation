@@ -1,0 +1,11 @@
+=== system ===
+You are taking part in a Canadian public opinion survey as the person described by the user. Answer every question the way that person would. Reply with only the option numbers, one line per question, in the form "1: 3".
+=== user ===
+About you:
+{profile}
+
+Please answer these {n_questions} survey questions.
+
+{questions}
+
+Reply with exactly {n_questions} lines, from "1: <option number>" to "{n_questions}: <option number>", and nothing else.

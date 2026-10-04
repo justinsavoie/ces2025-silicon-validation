@@ -1,0 +1,398 @@
+{
+  "small_partisan_smoke1": {
+    "model": "Qwen/Qwen3.5-9B",
+    "provider": "together",
+    "condition": "partisan",
+    "fields": [
+      "region",
+      "age_band",
+      "gender",
+      "province",
+      "education",
+      "income",
+      "first_language",
+      "religion",
+      "born_in_canada",
+      "party_id",
+      "left_right",
+      "vote_2019"
+    ],
+    "profiles": 15,
+    "settings": {
+      "temperature": 1.0,
+      "top_p": 1.0,
+      "max_tokens": 256,
+      "chat_template_kwargs": {
+        "enable_thinking": false
+      }
+    },
+    "prompt_sha256": "d2f3aa8a0d49a8b0729ab43a16004c0586031fc140eeb8be26bca5f2696e5d09",
+    "first_call": "2026-10-03T16:31:28+00:00",
+    "last_call": "2026-10-03T16:31:46+00:00",
+    "tokens": {
+      "prompt_tokens": 13471,
+      "completion_tokens": 765
+    },
+    "invalid_rate": 0.0,
+    "invalid_by_item": {
+      "cps25_spend_afford_h": 0.0,
+      "cps25_spend_nation_c": 0.0,
+      "cps25_spend_defence": 0.0,
+      "cps25_spend_rec_indi": 0.0,
+      "cps25_pos_life": 0.0,
+      "cps25_pos_energy": 0.0,
+      "cps25_pos_jobs": 0.0,
+      "cps25_imm": 0.0,
+      "cps25_demsat": 0.0,
+      "cps25_own_fin_retro": 0.0
+    },
+    "finish_reasons": {
+      "stop": 15
+    },
+    "retried_calls": 4
+  },
+  "large_partisan_smoke1": {
+    "model": "Qwen/Qwen3.8-2.4T-A95B",
+    "provider": "together",
+    "condition": "partisan",
+    "fields": [
+      "region",
+      "age_band",
+      "gender",
+      "province",
+      "education",
+      "income",
+      "first_language",
+      "religion",
+      "born_in_canada",
+      "party_id",
+      "left_right",
+      "vote_2019"
+    ],
+    "profiles": 15,
+    "settings": {
+      "temperature": 1.0,
+      "top_p": 1.0,
+      "max_tokens": 256,
+      "chat_template_kwargs": {
+        "enable_thinking": false
+      }
+    },
+    "prompt_sha256": "d2f3aa8a0d49a8b0729ab43a16004c0586031fc140eeb8be26bca5f2696e5d09",
+    "first_call": "2026-10-03T16:31:48+00:00",
+    "last_call": "2026-10-03T16:31:52+00:00",
+    "tokens": {
+      "prompt_tokens": 13471,
+      "completion_tokens": 970
+    },
+    "invalid_rate": 0.0667,
+    "invalid_by_item": {
+      "cps25_spend_afford_h": 0.0667,
+      "cps25_spend_nation_c": 0.0667,
+      "cps25_spend_defence": 0.0667,
+      "cps25_spend_rec_indi": 0.0667,
+      "cps25_pos_life": 0.0667,
+      "cps25_pos_energy": 0.0667,
+      "cps25_pos_jobs": 0.0667,
+      "cps25_imm": 0.0667,
+      "cps25_demsat": 0.0667,
+      "cps25_own_fin_retro": 0.0667
+    },
+    "finish_reasons": {
+      "stop": 14,
+      "length": 1
+    },
+    "retried_calls": 0
+  },
+  "small_basic": {
+    "model": "Qwen/Qwen3.5-9B",
+    "provider": "together",
+    "condition": "basic",
+    "fields": [
+      "region",
+      "age_band",
+      "gender"
+    ],
+    "profiles": 1500,
+    "settings": {
+      "temperature": 1.0,
+      "top_p": 1.0,
+      "max_tokens": 1024,
+      "chat_template_kwargs": {
+        "enable_thinking": false
+      }
+    },
+    "prompt_sha256": "d2f3aa8a0d49a8b0729ab43a16004c0586031fc140eeb8be26bca5f2696e5d09",
+    "first_call": "2026-10-03T16:34:03+00:00",
+    "last_call": "2026-10-03T16:40:48+00:00",
+    "tokens": {
+      "prompt_tokens": 1175313,
+      "completion_tokens": 76457
+    },
+    "invalid_rate": 0.0073,
+    "invalid_by_item": {
+      "cps25_spend_afford_h": 0.0067,
+      "cps25_spend_nation_c": 0.006,
+      "cps25_spend_defence": 0.0067,
+      "cps25_spend_rec_indi": 0.0067,
+      "cps25_pos_life": 0.0053,
+      "cps25_pos_energy": 0.0073,
+      "cps25_pos_jobs": 0.008,
+      "cps25_imm": 0.0087,
+      "cps25_demsat": 0.0087,
+      "cps25_own_fin_retro": 0.0087
+    },
+    "finish_reasons": {
+      "stop": 1500
+    },
+    "retried_calls": 54
+  },
+  "small_rich": {
+    "model": "Qwen/Qwen3.5-9B",
+    "provider": "together",
+    "condition": "rich",
+    "fields": [
+      "region",
+      "age_band",
+      "gender",
+      "province",
+      "education",
+      "income",
+      "first_language",
+      "religion",
+      "born_in_canada"
+    ],
+    "profiles": 1500,
+    "settings": {
+      "temperature": 1.0,
+      "top_p": 1.0,
+      "max_tokens": 1024,
+      "chat_template_kwargs": {
+        "enable_thinking": false
+      }
+    },
+    "prompt_sha256": "d2f3aa8a0d49a8b0729ab43a16004c0586031fc140eeb8be26bca5f2696e5d09",
+    "first_call": "2026-10-03T16:40:50+00:00",
+    "last_call": "2026-10-03T16:46:42+00:00",
+    "tokens": {
+      "prompt_tokens": 1280178,
+      "completion_tokens": 76881
+    },
+    "invalid_rate": 0.0066,
+    "invalid_by_item": {
+      "cps25_spend_afford_h": 0.006,
+      "cps25_spend_nation_c": 0.0053,
+      "cps25_spend_defence": 0.0067,
+      "cps25_spend_rec_indi": 0.0067,
+      "cps25_pos_life": 0.004,
+      "cps25_pos_energy": 0.0053,
+      "cps25_pos_jobs": 0.0073,
+      "cps25_imm": 0.008,
+      "cps25_demsat": 0.008,
+      "cps25_own_fin_retro": 0.0087
+    },
+    "finish_reasons": {
+      "stop": 1500
+    },
+    "retried_calls": 38
+  },
+  "small_partisan": {
+    "model": "Qwen/Qwen3.5-9B",
+    "provider": "together",
+    "condition": "partisan",
+    "fields": [
+      "region",
+      "age_band",
+      "gender",
+      "province",
+      "education",
+      "income",
+      "first_language",
+      "religion",
+      "born_in_canada",
+      "party_id",
+      "left_right",
+      "vote_2019"
+    ],
+    "profiles": 1500,
+    "settings": {
+      "temperature": 1.0,
+      "top_p": 1.0,
+      "max_tokens": 1024,
+      "chat_template_kwargs": {
+        "enable_thinking": false
+      }
+    },
+    "prompt_sha256": "d2f3aa8a0d49a8b0729ab43a16004c0586031fc140eeb8be26bca5f2696e5d09",
+    "first_call": "2026-10-03T16:46:44+00:00",
+    "last_call": "2026-10-03T16:51:15+00:00",
+    "tokens": {
+      "prompt_tokens": 1346351,
+      "completion_tokens": 76491
+    },
+    "invalid_rate": 0.0019,
+    "invalid_by_item": {
+      "cps25_spend_afford_h": 0.0013,
+      "cps25_spend_nation_c": 0.0013,
+      "cps25_spend_defence": 0.0027,
+      "cps25_spend_rec_indi": 0.0013,
+      "cps25_pos_life": 0.002,
+      "cps25_pos_energy": 0.0013,
+      "cps25_pos_jobs": 0.0013,
+      "cps25_imm": 0.002,
+      "cps25_demsat": 0.002,
+      "cps25_own_fin_retro": 0.0033
+    },
+    "finish_reasons": {
+      "stop": 1500
+    },
+    "retried_calls": 42
+  },
+  "large_basic": {
+    "model": "Qwen/Qwen3.8-2.4T-A95B",
+    "provider": "together",
+    "condition": "basic",
+    "fields": [
+      "region",
+      "age_band",
+      "gender"
+    ],
+    "profiles": 1500,
+    "settings": {
+      "temperature": 1.0,
+      "top_p": 1.0,
+      "max_tokens": 1024,
+      "chat_template_kwargs": {
+        "enable_thinking": false
+      }
+    },
+    "prompt_sha256": "d2f3aa8a0d49a8b0729ab43a16004c0586031fc140eeb8be26bca5f2696e5d09",
+    "first_call": "2026-10-03T16:51:17+00:00",
+    "last_call": "2026-10-03T16:55:32+00:00",
+    "tokens": {
+      "prompt_tokens": 1175313,
+      "completion_tokens": 133985
+    },
+    "invalid_rate": 0.0048,
+    "invalid_by_item": {
+      "cps25_spend_afford_h": 0.0047,
+      "cps25_spend_nation_c": 0.004,
+      "cps25_spend_defence": 0.0053,
+      "cps25_spend_rec_indi": 0.004,
+      "cps25_pos_life": 0.004,
+      "cps25_pos_energy": 0.0053,
+      "cps25_pos_jobs": 0.006,
+      "cps25_imm": 0.0053,
+      "cps25_demsat": 0.0047,
+      "cps25_own_fin_retro": 0.0047
+    },
+    "finish_reasons": {
+      "stop": 1496,
+      "length": 4
+    },
+    "retried_calls": 0
+  },
+  "large_rich": {
+    "model": "Qwen/Qwen3.8-2.4T-A95B",
+    "provider": "together",
+    "condition": "rich",
+    "fields": [
+      "region",
+      "age_band",
+      "gender",
+      "province",
+      "education",
+      "income",
+      "first_language",
+      "religion",
+      "born_in_canada"
+    ],
+    "profiles": 1500,
+    "settings": {
+      "temperature": 1.0,
+      "top_p": 1.0,
+      "max_tokens": 1024,
+      "chat_template_kwargs": {
+        "enable_thinking": false
+      }
+    },
+    "prompt_sha256": "d2f3aa8a0d49a8b0729ab43a16004c0586031fc140eeb8be26bca5f2696e5d09",
+    "first_call": "2026-10-03T16:55:33+00:00",
+    "last_call": "2026-10-03T17:02:13+00:00",
+    "tokens": {
+      "prompt_tokens": 1280178,
+      "completion_tokens": 148380
+    },
+    "invalid_rate": 0.0055,
+    "invalid_by_item": {
+      "cps25_spend_afford_h": 0.0053,
+      "cps25_spend_nation_c": 0.0067,
+      "cps25_spend_defence": 0.0067,
+      "cps25_spend_rec_indi": 0.006,
+      "cps25_pos_life": 0.0047,
+      "cps25_pos_energy": 0.0047,
+      "cps25_pos_jobs": 0.0053,
+      "cps25_imm": 0.0053,
+      "cps25_demsat": 0.0053,
+      "cps25_own_fin_retro": 0.0053
+    },
+    "finish_reasons": {
+      "stop": 1492,
+      "length": 8
+    },
+    "retried_calls": 0
+  },
+  "large_partisan": {
+    "model": "Qwen/Qwen3.8-2.4T-A95B",
+    "provider": "together",
+    "condition": "partisan",
+    "fields": [
+      "region",
+      "age_band",
+      "gender",
+      "province",
+      "education",
+      "income",
+      "first_language",
+      "religion",
+      "born_in_canada",
+      "party_id",
+      "left_right",
+      "vote_2019"
+    ],
+    "profiles": 1500,
+    "settings": {
+      "temperature": 1.0,
+      "top_p": 1.0,
+      "max_tokens": 1024,
+      "chat_template_kwargs": {
+        "enable_thinking": false
+      }
+    },
+    "prompt_sha256": "d2f3aa8a0d49a8b0729ab43a16004c0586031fc140eeb8be26bca5f2696e5d09",
+    "first_call": "2026-10-03T17:02:14+00:00",
+    "last_call": "2026-10-03T17:13:14+00:00",
+    "tokens": {
+      "prompt_tokens": 1346351,
+      "completion_tokens": 180134
+    },
+    "invalid_rate": 0.0125,
+    "invalid_by_item": {
+      "cps25_spend_afford_h": 0.0107,
+      "cps25_spend_nation_c": 0.0127,
+      "cps25_spend_defence": 0.0147,
+      "cps25_spend_rec_indi": 0.012,
+      "cps25_pos_life": 0.0127,
+      "cps25_pos_energy": 0.0127,
+      "cps25_pos_jobs": 0.012,
+      "cps25_imm": 0.0127,
+      "cps25_demsat": 0.0113,
+      "cps25_own_fin_retro": 0.0133
+    },
+    "finish_reasons": {
+      "stop": 1483,
+      "length": 17
+    },
+    "retried_calls": 2
+  }
+}

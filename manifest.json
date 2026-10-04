@@ -19,5 +19,13 @@
     "Region"
   ],
   "missing_value": "Not asked / missing",
-  "baseline": "Unweighted overall CES modal answer per question; ties use smallest original code."
+  "baseline": "Unweighted overall CES modal answer per question; ties use smallest original code.",
+  "source_2021": "/Users/justinsavoie/Documents/personal_repos/opinionbench-research/data/raw/CES2021/dataverse_files (6)/2021 Canadian Election Study v2.0.dta",
+  "source_2021_sha256": "d8abbff6946f0bc05a53b757529a35f5c168f30074bfd7e5c2212f2f75ab2b2d",
+  "profiles_2021": {
+    "rows": 1500,
+    "per_group": 100,
+    "seed": 2021,
+    "train_rows": 19468
+  }
 }

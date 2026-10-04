@@ -13,22 +13,20 @@ Weights are **question-specific CES respondent shares, not official survey weigh
 
 ## Reproduce
 
-Python with pandas and numpy is required. From this directory:
+Python with pandas, numpy, scikit-learn and httpx is required. From this directory:
 
 ```sh
-../opinionbench/.venv/bin/python build.py
-../opinionbench/.venv/bin/python score.py results_stupid_baseline.csv
+PY=../opinionbench/.venv/bin/python
+$PY build.py        # CES 2025 answer key: validation.csv, questions.json
+$PY build21.py      # CES 2021: profiles_2021.csv (1,500), train_2021.csv
+$PY baselines.py    # results_base21_{overall_mode,group_mode,logit_*}.csv
+$PY run.py --model small --condition basic --key-file ~/path/to/together-key.txt   # or TOGETHER_API_KEY
+$PY score.py results_small_basic.csv --baseline results_base21_logit_basic.csv
 quarto render plan.qmd --to pdf
 ```
 
-For a new model, save `results_MODEL.csv` with exactly the same columns and 100 rows per group, using unique synthetic IDs and exact option text from `questions.json`. Then:
+`run.py` takes `--model small|large`, `--condition basic|rich|partisan`, `--backend mock` for a dry run, and `--per-group 1` for a 15-call smoke test. Raw replies go to `raw/<run>.jsonl` (an interrupted run resumes), parsed answers to `results_<run>.csv`, and settings, tokens and invalid rates to `runs.json`. The prompt is `prompt.txt`, rendered by `survey.py`.
 
-```sh
-../opinionbench/.venv/bin/python score.py results_MODEL.csv
-```
+`score.py` writes overall scores with bootstrap 95% CIs, subgroup scores, comparisons with the chosen baseline (default: 2021 overall mode) and a one-row `scores_<run>_headline.csv`. Positive `improvement` means lower TV than the baseline. Results do not claim respondent-level prediction: synthetic IDs have no human counterpart.
 
-The scorer writes overall scores, subgroup scores and comparisons to the baseline. Positive `improvement` means lower TV than the baseline. Results do not claim respondent-level prediction: synthetic IDs have no human counterpart.
-
-No model inference or fine-tuning has been run. The baseline selects its mode from the full evaluation data and is an informed diagnostic comparator. Record any training exposure to the validation questions/respondents before claiming generalization.
-
-Respondent data and generated result CSVs are ignored by Git. The folder is not initialized as a separate Git repository.
+`results_stupid_baseline.csv` takes its modes from CES 2025 itself, so it breaks the temporal holdout; it is kept only as a diagnostic. Respondent data and generated CSVs are ignored by Git.

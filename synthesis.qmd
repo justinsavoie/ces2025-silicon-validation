@@ -1,0 +1,83 @@
+---
+title: "CES 2025 Silicon-Sampling Synthesis: Prompting vs. Fine-Tuning"
+subtitle: "In-Context Personas (Savoie) · Domain Fine-Tuning (Cadieux) · Findings & Next Steps"
+author: "Justin Savoie & Hubert Cadieux"
+date: "2026-10-12"
+format:
+  pdf:
+    documentclass: article
+    fontsize: 10pt
+    geometry: margin=0.48in
+    include-in-header:
+      text: |
+        \usepackage{enumitem}
+        \usepackage{booktabs}
+        \setlist{nosep,leftmargin=*}
+        \setlength{\parindent}{0pt}
+        \setlength{\parskip}{2pt}
+        \AtBeginDocument{\setlength{\abovedisplayskip}{1.5pt}\setlength{\belowdisplayskip}{1.5pt}}
+---
+
+## 1. What We Tested: Two Parallel Paradigms
+
+Can Large Language Models (LLMs) accurately simulate Canadian public opinion across 15 demographic subgroups (5 regions $\times$ 3 age cohorts) on 10 policy items from the 2025 Canadian Election Study ($N = 20,180$)? Two parallel programs investigated complementary paradigms under strict temporal holdouts, scored by Total Variation (TV) distance ($0.0 = \text{perfect match}$; lower is better):
+
+* **Justin Savoie (In-Context Prompting)**: Evaluated hosted zero-shot `Qwen3.5-9B` and `Qwen3.8-2.4T-A95B` (Together API) on 1,500 CES 2021 profiles (100/cell) across **Basic**, **Rich**, and **Rich + Partisan** conditions (10 items/call; temp 1.0; thinking disabled), benchmarked against 2021 multinomial logits.
+* **Hubert Cadieux (Domain Fine-Tuning)**: Supervised LoRA on `Llama-3.3-70B-Instruct` (Azure AI Foundry) across 8 Canadian surveys (2019--2024; 20k/50k/100k samples), testing **Fixed thematic** vs. **Semantic** context on 15,000 respondents (1 item/call + 7 past answers). Note: Azure Content Safety filtered out immigration and moral value items.
+
+## 2. Benchmark Scoreboard (Mean Total Variation)
+
+| Approach / Model | Configuration / Condition | Mean TV | Error / Uncertainty |
+|---|---|:---:|:---:|
+| *Reference Baselines* | Real 2025 national distribution (no subgroup gaps) | 0.085 | 9 / 100 out of place |
+| | Human measurement floor (split-halves of 2025) | 0.062 | 6 / 100 out of place |
+| **Historical & Logit** | **CES 2021 Multinomial Logit (Partisan, Savoie)** | **0.150** | [0.144, 0.160] |
+| | **CES 2021 Same Subgroup Unchanged (Cadieux)** | **0.151** | 15 / 100 out of place |
+| **Cadieux (Fine-Tuned)** | **Llama 70B: Fixed context, 50k examples** | **0.178** | 18 / 100 out of place |
+| **Savoie (Prompted)** | **Qwen 9B: Rich + Partisan** | **0.258** | [0.251, 0.266] |
+| | Qwen 2.4T MoE: Rich + Partisan | 0.323 | [0.316, 0.330] |
+| *Untrained Baseline* | Untrained Llama-3.3-70B (Cadieux) | 0.325 | 33 / 100 out of place |
+| *Modal Baseline* | CES 2021 Group Mode (Savoie) | 0.504 | --- |
+
+*Key findings: (1) Fine-tuning roughly halves error (TV 0.178 vs. 0.325 base and 0.258 best prompting); (2) Untrained priors align across families (~0.32); (3) Classical benchmarks lead---the 2021 logit (0.150) and unchanged 2021 survey (0.151) beat every LLM on 8 of 10 items. Other runs: Cadieux Semantic 50k (0.188), Fixed 100k (0.191); Savoie Qwen 9B Rich (0.323), Basic (0.357); Qwen 2.4T Rich (0.421), Basic (0.477); Modal 0.504--0.615.*
+
+\newpage
+
+## 3. Main Substantive Takeaways
+
+1. **The "Flattening" Problem (Level vs. Differences)**:
+   * Cadieux's error decomposition shows why models lose to historical polls: while both have comparable national-level error (0.141 for CES 2021 vs. 0.157 for fine-tuned 70B), **CES 2021 captures 69\% of subgroup gap magnitude (correlation 0.71)**, whereas the fine-tuned model captures only **31\% (correlation 0.42)**.
+   * Applying the actual 2025 national figure to CES 2021 subgroup gaps lands at a TV of **0.064**---nearly reaching the human noise floor (0.062). Models regress heavily toward the mean and homogenize subgroups.
+
+2. **The Scale Paradox: Model Size Degrades Opinion Fidelity**:
+   * In Savoie's benchmark, the 2.4T MoE model performed *worse* than the 9B model in every condition (Basic TV 0.477 vs. 0.357).
+   * Larger models suffered from severe mode collapse and extreme hedging: under basic profiles, 78\% answered "about the same" on immigration and 75\% on defence. Safety training in ultra-large models appears to enforce synthetic consensus.
+
+3. **Information Conditioning Matters**:
+   * *In prompting (Savoie)*: Adding partisan identifiers and vote recall produces the single largest jump in accuracy (TV 0.357 $\to$ 0.258).
+   * *In fine-tuning (Cadieux)*: Fixed thematic context (ideology, trust, party, redistribution) consistently beat semantic nearest-neighbor retrieval (0.178 vs. 0.188). 50k training examples was the optimal sweet spot.
+
+4. **Where LLMs Win vs. Systematic Failures**:
+   * **Defence (Clear Model Win)**: Canadian opinion shifted sharply between 2021 and 2025 ($56\%$ favored more spending). CES 2021 is off by 31 points (TV 0.31--0.36), but models captured the shift (Cadieux: 0.17; Savoie: 0.24). Training on recent Democracy Checkup data enabled the LLM to beat the past poll.
+   * **Immigration (Failure for Both)**: 62\% of 2025 Canadians chose "admit fewer". Prompted models picked it only 2--4\% of the time. In Cadieux's fine-tuning, Azure Content Safety rejected immigration questions as hate/unfairness, creating a total blind spot (TV 0.30--0.31).
+   * **Indigenous Reconciliation (Progressive Skew)**: Models predicted "spend more" 68--91\% of the time, compared to only 22\% of actual human respondents.
+
+## 4. Next Steps & Collaborative Roadmap
+
+1. **Benchmark Novel Questions (The True Value Hypothesis)**:
+   * For repeated survey items, historical polling remains superior and cheaper. The legitimate scientific promise of silicon sampling lies in **novel questions** with no past baseline.
+   * *Action*: Extract 10--15 novel policy questions from CES 2025 (items not asked in 2019/2021) and evaluate prompted vs. fine-tuned accuracy on this zero-prior benchmark.
+
+2. **Develop a Hybrid "Historical Gaps + LLM Level" Estimator**:
+   * Subgroup demographic differences are structurally stable over time, but aggregate national sentiment shifts.
+   * *Action*: Formulate a hybrid estimator: $\hat{P}_{jgk} = \text{LLM National Shift}_{jk} + \text{Historical Subgroup Gap}_{jgk}$. Since applying real national distributions to 2021 gaps yields 0.064 TV, using LLMs solely to predict macro shifts while anchoring to survey gaps offers a path to outperforming both baselines.
+
+3. **Establish an Unfiltered Fine-Tuning Pipeline**:
+   * Cloud safety filters (Azure Content Safety) crippled immigration training data.
+   * *Action*: Re-train Llama 70B on unmoderated infrastructure (RunPod / Together / local compute) with the complete Canadian survey corpus to test whether fine-tuning can learn the post-2021 immigration shift.
+
+4. **Fix Subgroup Flattening & Decoding Calibration**:
+   * Investigate whether temperature 1.0, top-p, or prompt framing causes subgroup compression. Test temperature scaling, contrastive decoding, and persona weight recalibration to restore authentic demographic variance.
+
+5. **Co-Author a Unified Synthesis Paper**:
+   * Combine Savoie's holdout framework and prompt richness analysis with Cadieux's fine-tuning decomposition into a definitive methodological paper: *When Does Silicon Sampling Beat a Past Poll? Evidence from the 2025 Canadian Election Study*.

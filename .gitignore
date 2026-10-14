@@ -6,3 +6,4 @@ __pycache__/
 profiles_2021.csv
 train_2021.csv
 raw/
+.DS_Store
